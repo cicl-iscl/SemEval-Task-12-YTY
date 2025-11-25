@@ -1,6 +1,6 @@
 # SemEval-Task-12-YTY
 ##  Baseline Performance Summary
-| Model Configuration | Accuracy |
+| Model Configuration | Score |
 | :--- | :--- |
 | Gemini 2.5 Flash (Base) | 0.6475 |
 | Gemini 2.5 Flash (RAG) | o.6825 |
