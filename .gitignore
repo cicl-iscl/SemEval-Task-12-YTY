@@ -1,3 +1,4 @@
 *.pyc
 .ipynb_checkpoints
 semeval2026-task12-dataset/*
+.DS_Store
