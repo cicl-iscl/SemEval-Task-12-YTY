@@ -14,7 +14,8 @@ class DocRetrieverV2:
         
         print(f"Using device: {self.device}")
         self.model = SentenceTransformer(model_name, device=self.device)
-        
+    
+
     def load_data(self, questions_path, docs_path):
         print(f"Loading questions from {questions_path} and docs from {docs_path}...")
         questions = []
@@ -49,7 +50,7 @@ class DocRetrieverV2:
                 
             topic_docs = self.topic_map[topic_id]
             # Use title + snippet for embedding search
-            doc_texts = [f"{d.get('title', '')} {d.get('snippet', '')}" for d in topic_docs]
+            doc_texts = [f"{doc.get('title', '')} {doc.get('snippet', '')}" for doc in topic_docs]
             doc_embs = self.model.encode(doc_texts, convert_to_tensor=True)
             
             retrieved_ids = set()
@@ -66,7 +67,7 @@ class DocRetrieverV2:
                             'id': doc['id'],
                             'title': doc['title'],
                             'content': doc['content'],
-                            'score': float(score),
+                            'score': float(score), 
                             'source': source_type
                         })
 
@@ -107,7 +108,7 @@ def main():
         for q in enriched:
             f.write(json.dumps(q, ensure_ascii=False) + '\n')
             
-    print(f"Hybrid retrieval complete. Saved to {args.output}")
+    print(f"Saved to {args.output}")
 
 if __name__ == "__main__":
     main()

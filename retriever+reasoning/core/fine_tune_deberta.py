@@ -7,14 +7,8 @@ from sentence_transformers import CrossEncoder, InputExample
 from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score
 
-# ==========================================
-# Robust Custom Evaluator for Colab
-# ==========================================
 class SimpleCEEvaluator:
-    """
-    Custom Cross-Encoder Evaluator that avoids dependency/import issues 
-    and handles 'not iterable' errors.
-    """
+    # Current Cross-Encoder Evaluator in Transformer library has some dependency issues and is not iterable. This is a simplified version.
     def __init__(self, sentences1, sentences2, labels, name='dev_set'):
         self.sentences1 = sentences1
         self.sentences2 = sentences2
@@ -34,12 +28,7 @@ class SimpleCEEvaluator:
         acc = accuracy_score(self.labels, preds)
         
         print(f"\n[Evaluation] Step {steps}: Accuracy = {acc:.4f}")
-        
-        # Save model if it's the best so far
-        if output_path is not None:
-            # We save the model in the specific output_path provided by fit
-            model.save(output_path)
-            
+
         return acc
 
     def __iter__(self):
@@ -47,9 +36,9 @@ class SimpleCEEvaluator:
 
 class CausalFineTuner:
     def __init__(self, model_name='microsoft/deberta-v3-large'):
-        print(f"Initializing Fine-Tuner with model: {model_name}")
+        print(f"Model: {model_name}")
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        print(f"Using device: {self.device}")
+        print(f"Device: {self.device}")
         self.model = CrossEncoder(model_name, num_labels=1, device=self.device)
         
     def load_data(self, filepath, is_dev=False):
@@ -112,9 +101,6 @@ class CausalFineTuner:
             save_best_model=True if dev_evaluator else False,
             use_amp=True  # Mixed precision for T4 GPU
         )
-        
-        # Note: We don't call self.model.save() here to avoid overwriting the best model 
-        # with the potentially overfitted final epoch model.
         print(f"Training finished. Best model should be in: {output_path}")
 
 def main():

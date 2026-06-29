@@ -31,7 +31,9 @@ class CausalReasonerV2:
         """
         Exact same context preparation as used in training.
         """
-        return " ".join([f"{d['title']}: {d['content'][:300]}" for d in retrieved_docs[:8]])
+        # Limit to 8 docs.. for default setting we wouldn't need this much!
+        # first 300 chars of content due to sequnce length limits(512 tokens for deberta-v3-large)
+        return " ".join([f"{doc['title']}: {doc['content'][:300]}" for doc in retrieved_docs[:8]]) 
 
     def predict(self, questions, threshold=0.5):
         print(f"Predicting causal relationships (threshold={threshold})...")
