@@ -8,7 +8,9 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import accuracy_score
 
 class SimpleCEEvaluator:
-    # Current Cross-Encoder Evaluator in Transformer library has some dependency issues and is not iterable. This is a simplified version.
+    # CEBinaryClassificationEvaluator was acting up. 
+    # Current Cross-Encoder Evaluator in Transformer library has some dependency issues on Colab and is not iterable.
+    # This is a simplified version.
     def __init__(self, sentences1, sentences2, labels, name='dev_set'):
         self.sentences1 = sentences1
         self.sentences2 = sentences2
@@ -54,18 +56,19 @@ class CausalFineTuner:
             return data
         
         examples = []
-        for q in data:
+        for q in data: # Nested loops
             target = q['target_event']
             golden = set(str(q['golden_answer']).split(','))
             retrieved_docs = q.get('retrieved_docs', [])
             
             # Context concatenation (limit to 8 docs)
             context = " ".join([f"{d['title']}: {d['content'][:300]}" for d in retrieved_docs[:8]])
-            
+            # Format:
+            # {Target} | {Option} <SEP> {Context} ==> each question diverged into 4 single binary classfication problems.
             for opt_key in ['A', 'B', 'C', 'D']:
                 opt_text = q[f'option_{opt_key}']
                 label = 1.0 if opt_key in golden else 0.0
-                examples.append(InputExample(texts=[f"{target} | {opt_text}", context], label=label))
+                examples.append(InputExample(texts=[f"{target} | {opt_text}", context], label=label)) # [s1, s2], l
         
         print(f"Created {len(examples)} training examples.")
         return examples
@@ -106,8 +109,8 @@ class CausalFineTuner:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=str, default='microsoft/deberta-v3-large')
-    parser.add_argument("--train_data", type=str, default='train_data/questions_with_docs_phase3.jsonl')
-    parser.add_argument("--dev_data", type=str, default='dev_data/questions_with_docs_phase3.jsonl')
+    parser.add_argument("--train_data", type=str, default='train_data/hybrid_docs.jsonl')
+    parser.add_argument("--dev_data", type=str, default='dev_data/hybrid_docs.jsonl')
     parser.add_argument("--output", type=str, default='causal_fine_tuned_model_large')
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch_size", type=int, default=4)

@@ -7,3 +7,6 @@ pipeline_diagram.jpg
 train_data/
 dev_data/
 venv/
+retriever+reasoning/core/Full pipline.svg
+retriever+reasoning/core/reasoning_results_v2.json
+retriever+reasoning/core/structure.svg

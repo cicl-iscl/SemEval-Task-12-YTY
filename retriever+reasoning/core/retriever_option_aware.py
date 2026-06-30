@@ -7,7 +7,7 @@ import argparse
 
 class DocRetrieverV2:
     def __init__(self, model_name='all-MiniLM-L12-v2'):
-        print(f"Initializing Retriever V2 with model: {model_name}")
+        print(f"Model: {model_name}")
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         if torch.backends.mps.is_available():
             self.device = 'mps'
@@ -17,7 +17,7 @@ class DocRetrieverV2:
     
 
     def load_data(self, questions_path, docs_path):
-        print(f"Loading questions from {questions_path} and docs from {docs_path}...")
+        print(f"Questions:{questions_path} and Documents:{docs_path}...")
         questions = []
         with open(questions_path, 'r', encoding='utf-8') as f:
             for line in f:
@@ -30,9 +30,9 @@ class DocRetrieverV2:
         return questions
 
     def retrieve_hybrid_docs(self, questions, global_k=2, option_k=1):
-        print(f"Performing Hybrid Retrieval (Global K={global_k}, Option K={option_k})...")
+        print(f"Global K={global_k}, Option K={option_k}")
         results = []
-        
+
         for q in tqdm(questions):
             topic_id = q['topic_id']
             target_event = q['target_event']
@@ -50,7 +50,7 @@ class DocRetrieverV2:
                 
             topic_docs = self.topic_map[topic_id]
             # Use title + snippet for embedding search
-            doc_texts = [f"{doc.get('title', '')} {doc.get('snippet', '')}" for doc in topic_docs]
+            doc_texts = [f"{doc.get('title', '')}: {doc.get('snippet', '')}" for doc in topic_docs]
             doc_embs = self.model.encode(doc_texts, convert_to_tensor=True)
             
             retrieved_ids = set()
@@ -73,12 +73,14 @@ class DocRetrieverV2:
 
             # 1. Global Search: Target Event only
             target_emb = self.model.encode(target_event, convert_to_tensor=True)
+            # Example: Prime Minister Han became acting president.
             target_scores = util.cos_sim(target_emb, doc_embs)[0]
             add_top_docs(target_scores, global_k, 'global')
             
             # 2. Option-Aware Search: Target + each Option
             for opt_key, opt_text in options.items():
                 query = f"{target_event} {opt_text}"
+                # Example: Prime Minister Han became acting president. South Korea’s parliament voted to impeach President Yoon
                 query_emb = self.model.encode(query, convert_to_tensor=True)
                 query_scores = util.cos_sim(query_emb, doc_embs)[0]
                 add_top_docs(query_scores, option_k, f'option_{opt_key}')
@@ -101,8 +103,8 @@ def main():
     args = parser.parse_args()
     
     retriever = DocRetrieverV2()
-    questions = retriever.load_data(args.questions, args.docs)
-    enriched = retriever.retrieve_hybrid_docs(questions, global_k=args.global_k, option_k=args.option_k)
+    questions_docs = retriever.load_data(args.questions, args.docs)
+    enriched = retriever.retrieve_hybrid_docs(questions_docs, global_k=args.global_k, option_k=args.option_k)
     
     with open(args.output, 'w', encoding='utf-8') as f:
         for q in enriched:
